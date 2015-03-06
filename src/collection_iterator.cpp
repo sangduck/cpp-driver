@@ -16,6 +16,8 @@
 
 #include "collection_iterator.hpp"
 
+#include "serialization.hpp"
+
 namespace cass {
 
 char* CollectionIterator::decode_value(char* position) {
@@ -33,15 +35,6 @@ char* CollectionIterator::decode_value(char* position) {
   value_ = Value(type, buffer, size);
 
   return buffer + size;
-}
-
-bool CollectionIterator::next() {
-  if (index_ + 1 >= count_) {
-    return false;
-  }
-  ++index_;
-  position_ = decode_value(position_);
-  return true;
 }
 
 } // namespace cass

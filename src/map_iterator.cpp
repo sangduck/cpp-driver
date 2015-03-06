@@ -30,13 +30,4 @@ char* MapIterator::decode_pair(char* position) {
   return position + size;
 }
 
-bool MapIterator::next() {
-  if (index_ + 1 >= count_) {
-    return false;
-  }
-  ++index_;
-  position_ = decode_pair(position_);
-  return true;
-}
-
 } // namespace cass

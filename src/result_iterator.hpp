@@ -49,6 +49,11 @@ public:
     return true;
   }
 
+  virtual void rewind() {
+    position_ = result_->rows();
+    index_ = -1;
+  }
+
   const Row* row() const {
     assert(index_ >= 0 && index_ < result_->row_count());
     if (index_ > 0) {

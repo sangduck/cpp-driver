@@ -20,7 +20,6 @@
 #include "cassandra.h"
 #include "iterator.hpp"
 #include "value.hpp"
-#include "serialization.hpp"
 
 namespace cass {
 
@@ -35,7 +34,19 @@ public:
                    ? (2 * collection_->count())
                    : collection->count()) {}
 
-  virtual bool next();
+  virtual bool next() {
+    if (index_ + 1 >= count_) {
+      return false;
+    }
+    ++index_;
+    position_ = decode_value(position_);
+    return true;
+  }
+
+  virtual void rewind() {
+    position_ = collection_->buffer().data();
+    index_ = -1;
+  }
 
   const Value* value() {
     assert(index_ >= 0 && index_ < count_);

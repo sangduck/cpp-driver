@@ -33,7 +33,19 @@ public:
       , index_(-1)
       , count_(map_->count()) {}
 
-  virtual bool next();
+  virtual bool next() {
+    if (index_ + 1 >= count_) {
+      return false;
+    }
+    ++index_;
+    position_ = decode_pair(position_);
+    return true;
+  }
+
+  virtual void rewind() {
+    position_ = map_->buffer().data();
+    index_ = -1;
+  }
 
   const Value* key() {
     assert(index_ >= 0 && index_ < count_);

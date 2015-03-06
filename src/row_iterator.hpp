@@ -37,6 +37,10 @@ public:
     return true;
   }
 
+  virtual void rewind() {
+    index_ = -1;
+  }
+
   const Value* column() {
     assert(index_ >= 0 && static_cast<size_t>(index_) < row_->values.size());
     return &row_->values[index_];

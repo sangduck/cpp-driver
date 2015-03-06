@@ -31,6 +31,7 @@ public:
   CassIteratorType type() const { return type_; }
 
   virtual bool next() = 0;
+  virtual void rewind() = 0;
 
 private:
   const CassIteratorType type_;

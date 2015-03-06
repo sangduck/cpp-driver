@@ -58,6 +58,10 @@ cass_bool_t cass_iterator_next(CassIterator* iterator) {
   return static_cast<cass_bool_t>(iterator->from()->next());
 }
 
+void cass_iterator_rewind(CassIterator* iterator) {
+  iterator->from()->rewind();
+}
+
 const CassRow* cass_iterator_get_row(CassIterator* iterator) {
   if (iterator->type() != CASS_ITERATOR_TYPE_RESULT) {
     return NULL;

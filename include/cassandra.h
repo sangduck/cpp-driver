@@ -2677,6 +2677,16 @@ CASS_EXPORT cass_bool_t
 cass_iterator_next(CassIterator* iterator);
 
 /**
+ * Rewind iterator to the beginning row, column, or collection item.
+ *
+ * @public @memberof CassIterator
+ *
+ * @param[in] iterator
+ */
+CASS_EXPORT void
+cass_iterator_rewind(CassIterator* iterator);
+
+/**
  * Gets the row at the result iterator's current position.
  *
  * Calling cass_iterator_next() will invalidate the previous

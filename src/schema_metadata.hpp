@@ -39,15 +39,19 @@ public:
   typedef std::map<std::string, T> Map;
 
   SchemaMapIteratorImpl(const Map& map)
-    : next_(map.begin())
-    , end_(map.end()) {}
+    : map_(map)
+    , next_(map.begin()) {}
 
   bool next() {
-    if (next_ == end_) {
+    if (next_ == map_.end()) {
       return false;
     }
     current_ = next_++;
     return true;
+  }
+
+  void rewind() {
+    next_ = map_.begin();
   }
 
   const T* item() const {
@@ -55,9 +59,9 @@ public:
   }
 
 private:
+  const Map& map_;
   typename Map::const_iterator next_;
   typename Map::const_iterator current_;
-  typename Map::const_iterator end_;
 };
 
 class SchemaMetadataField {
@@ -99,6 +103,7 @@ public:
     , impl_(map) {}
 
   virtual bool next() { return impl_.next(); }
+  virtual void rewind() { impl_.rewind(); }
   const SchemaMetadataField* field() const { return impl_.item(); }
 
 private:
@@ -148,6 +153,7 @@ public:
     : impl_(map) {}
 
   virtual bool next() { return impl_.next(); }
+  virtual void rewind() { impl_.rewind(); }
   virtual const SchemaMetadata* meta() const { return impl_.item(); }
 
 private:
