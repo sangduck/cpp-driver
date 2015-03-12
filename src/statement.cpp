@@ -256,13 +256,22 @@ CassError cass_statement_bind_bool(CassStatement* statement, size_t index,
 }
 
 CassError cass_statement_bind_string(CassStatement* statement, size_t index,
-                                     CassString value) {
-  return statement->bind(index, value);
+                                     const char* value) {
+  return cass_statement_bind_string_n(statement, index,
+                                      value, strlen(value));
+}
+
+CassError cass_statement_bind_string_n(CassStatement* statement, size_t index,
+                                       const char* value, size_t value_length) {
+  CassString s = { value, value_length };
+  return statement->bind(index, s);
 }
 
 CassError cass_statement_bind_bytes(CassStatement* statement, size_t index,
-                                    CassBytes value) {
-  return statement->bind(index, value);
+                                    const cass_byte_t* value,
+                                    size_t value_size) {
+  CassBytes b = { value, value_size };
+  return statement->bind(index, b);
 }
 
 CassError cass_statement_bind_uuid(CassStatement* statement, size_t index,
@@ -386,32 +395,37 @@ CassError cass_statement_bind_bool_by_name_n(CassStatement* statement,
 
 CassError cass_statement_bind_string_by_name(CassStatement* statement,
                                              const char* name,
-                                             CassString value) {
+                                             const char* value) {
   return cass_statement_bind_string_by_name_n(statement,
                                               name, strlen(name),
-                                              value);
+                                              value, strlen(value));
 }
 
 CassError cass_statement_bind_string_by_name_n(CassStatement* statement,
                                                const char* name,
                                                size_t name_length,
-                                               CassString value) {
-  return bind_by_name<CassString>(statement, boost::string_ref(name, name_length), value);
+                                               const char* value,
+                                               size_t value_length) {
+  CassString s = { value, value_length };
+  return bind_by_name<CassString>(statement, boost::string_ref(name, name_length), s);
 }
 
 CassError cass_statement_bind_bytes_by_name(CassStatement* statement,
                                             const char* name,
-                                            CassBytes value) {
+                                            cass_byte_t* value,
+                                            size_t value_size) {
   return cass_statement_bind_bytes_by_name_n(statement,
                                              name, strlen(name),
-                                             value);
+                                             value, value_size);
 }
 
 CassError cass_statement_bind_bytes_by_name_n(CassStatement* statement,
                                               const char* name,
                                               size_t name_length,
-                                              CassBytes value) {
-  return bind_by_name<CassBytes>(statement, boost::string_ref(name, name_length), value);
+                                              cass_byte_t* value,
+                                              size_t value_size) {
+  CassBytes b = { value, value_size };
+  return bind_by_name<CassBytes>(statement, boost::string_ref(name, name_length), b);
 }
 
 

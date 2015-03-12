@@ -37,6 +37,16 @@ struct CassCustom {
 
 struct CassNull {};
 
+struct CassBytes {
+  const cass_byte_t* data;
+  size_t size;
+};
+
+struct CassString {
+  const char* data;
+  size_t length;
+};
+
 namespace cass {
 
 class Statement : public RoutableRequest {
@@ -136,10 +146,10 @@ public:
 
   CassError bind(size_t index, CassDecimal value) {
     CASS_VALUE_CHECK_INDEX(index);
-    Buffer buf(sizeof(int32_t) + sizeof(int32_t) + value.varint.size);
-    size_t pos = buf.encode_int32(0, sizeof(int32_t) + value.varint.size);
+    Buffer buf(sizeof(int32_t) + sizeof(int32_t) + value.varint_size);
+    size_t pos = buf.encode_int32(0, sizeof(int32_t) + value.varint_size);
     pos = buf.encode_int32(pos, value.scale);
-    buf.copy(pos, value.varint.data, value.varint.size);
+    buf.copy(pos, value.varint, value.varint_size);
     values_[index] = buf;
     return CASS_OK;
   }
