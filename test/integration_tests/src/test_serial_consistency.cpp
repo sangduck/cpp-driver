@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(simple)
 {
   for (int i = 0; i < 2; ++i) {
     test_utils::CassFuturePtr future = insert_row(session, "abc", 99, CASS_CONSISTENCY_SERIAL);
-    BOOST_REQUIRE(cass_future_error_code(future.get()) == CASS_OK);
+    test_utils::wait_and_check_error(future.get());
     test_utils::CassResultPtr result(cass_future_get_result(future.get()));
     BOOST_REQUIRE(cass_result_row_count(result.get()) > 0);
     const CassValue* value = cass_row_get_column(cass_result_first_row(result.get()), 0);

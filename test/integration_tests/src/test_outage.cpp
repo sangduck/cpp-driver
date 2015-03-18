@@ -60,7 +60,7 @@ struct OutageTests : public test_utils::MultipleNodesTest {
     : test_utils::MultipleNodesTest(NUM_NODES, 0)
     , is_done(false)
     , timer(io_service) {
-    test_utils::CassLog::set_output_log_level(CASS_LOG_DEBUG);
+    test_utils::CassLog::set_output_log_level(CASS_LOG_DISABLED);
     printf("Warning! This test is going to take %d minutes\n", TEST_DURATION_SECS / 60);
     std::fill(nodes_states, nodes_states + NUM_NODES, UP);
     // TODO(mpenick): This is a stopgap. To be fixed in CPP-140
@@ -177,8 +177,9 @@ struct OutageTests : public test_utils::MultipleNodesTest {
 
   bool execute_insert(CassSession* session, const std::string& table_name) {
     std::string query = str(boost::format("INSERT INTO %s (id, event_time, text_sample) VALUES (?, ?, ?)") % table_name);
+    test_utils::CassPreparedPtr prepared = test_utils::prepare(session, query.c_str());
 
-    test_utils::CassStatementPtr statement(cass_statement_new(cass_string_init2(query.data(), query.size()), 3));
+    test_utils::CassStatementPtr statement(cass_prepared_bind(prepared.get()));
 
     boost::chrono::system_clock::time_point now(boost::chrono::system_clock::now());
     boost::chrono::milliseconds event_time(boost::chrono::duration_cast<boost::chrono::milliseconds>(now.time_since_epoch()));

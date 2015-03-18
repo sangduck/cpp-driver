@@ -48,28 +48,30 @@ BOOST_AUTO_TEST_CASE(paging_simple)
   const int page_size = 5;
 
   CassString insert_query = cass_string_init("INSERT INTO test (part, key, value) VALUES (?, ?, ?);");
+  std::string query(insert_query.data, insert_query.length);
+  test_utils::CassPreparedPtr prepared = test_utils::prepare(session, query.c_str());
+  test_utils::CassStatementPtr statement(cass_prepared_bind(prepared.get()));
 
   const cass_int32_t part_key = 0;
 
   for (int i = 0; i < num_rows; ++i) {
-    test_utils::CassStatementPtr statement(cass_statement_new(insert_query, 3));
     cass_statement_bind_int32(statement.get(), 0, part_key);
     cass_statement_bind_uuid(statement.get(), 1, test_utils::generate_time_uuid(uuid_gen));
     cass_statement_bind_int32(statement.get(), 2, i);
     test_utils::CassFuturePtr future(cass_session_execute(session, statement.get()));
-    BOOST_REQUIRE(cass_future_error_code(future.get()) == CASS_OK);
+    test_utils::wait_and_check_error(future.get());
   }
 
   CassString select_query = cass_string_init("SELECT value FROM test");
 
   test_utils::CassResultPtr result;
-  test_utils::CassStatementPtr statement(cass_statement_new(select_query, 0));
+  statement = test_utils::CassStatementPtr(cass_statement_new(select_query, 0));
   cass_statement_set_paging_size(statement.get(), page_size);
 
   cass_int32_t count = 0;
   do {
     test_utils::CassFuturePtr future(cass_session_execute(session, statement.get()));
-    BOOST_REQUIRE(cass_future_error_code(future.get()) == CASS_OK);
+    test_utils::wait_and_check_error(future.get());
     result = test_utils::CassResultPtr(cass_future_get_result(future.get()));
 
     test_utils::CassIteratorPtr iterator(cass_iterator_from_result(result.get()));
@@ -97,7 +99,7 @@ BOOST_AUTO_TEST_CASE(paging_empty)
   cass_statement_set_paging_size(statement.get(), page_size);
 
   test_utils::CassFuturePtr future(cass_session_execute(session, statement.get()));
-  BOOST_REQUIRE(cass_future_error_code(future.get()) == CASS_OK);
+  test_utils::wait_and_check_error(future.get());
   test_utils::CassResultPtr result(cass_future_get_result(future.get()));
   BOOST_REQUIRE(cass_result_has_more_pages(result.get()) == cass_false);
 }

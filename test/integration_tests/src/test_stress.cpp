@@ -51,6 +51,21 @@ struct StressTests : public test_utils::MultipleNodesTest {
     cass_session_free(session);
   }
 
+  bool create_and_execute_insert(const std::string &query, CassConsistency consistency) {
+    CassUuid time_uuid = test_utils::generate_random_uuid(uuid_gen);
+    std::string time_uuid_string = test_utils::Value<CassUuid>::to_string(time_uuid);
+    boost::chrono::system_clock::time_point now(boost::chrono::system_clock::now());
+    boost::chrono::milliseconds event_time(boost::chrono::duration_cast<boost::chrono::milliseconds>(now.time_since_epoch()));
+    std::string text_sample("'" + test_utils::string_from_time_point(now) + "'");
+
+    std::string simple_query = test_utils::replaceAll(query, "?", "%s");
+    simple_query = str(boost::format(simple_query) % time_uuid_string % event_time.count() % text_sample);
+    test_utils::CassStatementPtr statement(cass_statement_new(cass_string_init(simple_query.c_str()), 0));
+    cass_statement_set_consistency(statement.get(), consistency);
+
+    return execute_insert(statement.get());
+  }
+
   bool bind_and_execute_insert(CassStatement* statement) {
     boost::chrono::system_clock::time_point now(boost::chrono::system_clock::now());
     boost::chrono::milliseconds event_time(boost::chrono::duration_cast<boost::chrono::milliseconds>(now.time_since_epoch()));
@@ -60,6 +75,10 @@ struct StressTests : public test_utils::MultipleNodesTest {
     cass_statement_bind_int64(statement, 1, event_time.count());
     cass_statement_bind_string(statement, 2, cass_string_init2(text_sample.data(), text_sample.size()));
 
+    return execute_insert(statement);
+  }
+
+  bool execute_insert(CassStatement* statement) {
     test_utils::CassFuturePtr future(cass_session_execute(session, statement));
     cass_future_wait(future.get());
     CassError code = cass_future_error_code(future.get());
@@ -75,9 +94,7 @@ struct StressTests : public test_utils::MultipleNodesTest {
   bool insert_task(const std::string& query, CassConsistency consistency, int rows_per_id) {
     bool is_successful = true;
     for (int i = 0; i < rows_per_id; ++i) {
-      test_utils::CassStatementPtr statement(cass_statement_new(cass_string_init(query.c_str()), 3));
-      cass_statement_set_consistency(statement.get(), consistency);
-      if (!bind_and_execute_insert(statement.get())) {
+      if (!create_and_execute_insert(query, consistency)) {
         is_successful = false;
       }
     }

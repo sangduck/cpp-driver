@@ -127,6 +127,31 @@ const char* get_value_type(CassValueType type) {
   }
 }
 
+std::string to_hex(const char *byte_array) {
+    std::stringstream value;
+    value << std::hex << std::setfill('0');
+    for (unsigned int n = 0; n < strlen(byte_array); ++n) {
+      value << std::setw(2) << static_cast<unsigned>(byte_array[n]);
+    }
+
+    if (value.str().size() == 0) {
+      value << "00";
+    }
+    return value.str();
+}
+
+std::string replaceAll(const std::string& current, const std::string& search, const std::string& replace) {
+  // Go through each found occurrence and replace the value (in place)
+  std::string updated = current;
+  size_t found_position = 0;
+  while ((found_position = updated.find(search, found_position)) != std::string::npos) {
+    updated.replace(found_position, search.length(), replace);
+    found_position += replace.length();
+  }
+
+  return updated;
+}
+
 //-----------------------------------------------------------------------------------
 const std::string CREATE_KEYSPACE_SIMPLE_FORMAT = "CREATE KEYSPACE %s WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : %s }";
 const std::string CREATE_KEYSPACE_NETWORK_FORMAT = "CREATE KEYSPACE %s WITH replication = { 'class' : 'NetworkTopologyStrategy',  'dc1' : %d, 'dc2' : %d }";
@@ -196,6 +221,7 @@ SingleSessionTest::~SingleSessionTest() {
   if (session) {
     CassFuturePtr close_future(cass_session_close(session));
     cass_future_wait(close_future.get());
+    cass_session_free(session);
   }
   if (ssl) {
     cass_ssl_free(ssl);
@@ -267,6 +293,13 @@ void wait_and_check_error(CassFuture* future, cass_duration_t timeout) {
     CassString message = cass_future_error_message(future);
     BOOST_FAIL("Error occurred during query '" << std::string(message.data, message.length) << "' (" << boost::format("0x%08X") % code << ")");
   }
+}
+
+test_utils::CassPreparedPtr prepare(CassSession* session, const std::string& query) {
+  test_utils::CassFuturePtr prepared_future(cass_session_prepare(session,
+                                                                 cass_string_init2(query.data(), query.size())));
+  test_utils::wait_and_check_error(prepared_future.get());
+  return test_utils::CassPreparedPtr(cass_future_get_prepared(prepared_future.get()));
 }
 
 std::string string_from_time_point(boost::chrono::system_clock::time_point time) {
