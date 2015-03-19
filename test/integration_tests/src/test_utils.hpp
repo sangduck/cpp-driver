@@ -652,6 +652,10 @@ struct CassVersion {
   char extra[64];
 };
 
+/*
+ * TODO: Implement https://datastax-oss.atlassian.net/browse/CPP-244 to avoid
+ *       current test skip implementation in batch and serial_consistency.
+ */
 /** The following class cannot be used as a kernel of test fixture because of
     parametrized ctor. Derive from it to use it in your tests.
  */
