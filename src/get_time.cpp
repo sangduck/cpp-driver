@@ -28,6 +28,11 @@ namespace cass {
 
 #if defined(WIN32) || defined(_WIN32)
 
+uint64_t get_time_ns() {
+  // TODO: Implement
+  return 0;
+}
+
 uint64_t get_time_since_epoch_ms() {
   _FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
@@ -40,6 +45,13 @@ uint64_t get_time_since_epoch_ms() {
 
 #elif defined(__APPLE__) && defined(__MACH__)
 
+uint64_t get_time_ns() {
+  struct timeval time;
+  gettimeofday(&time, NULL);
+  uint64_t usecs = static_cast<uint64_t>(time.tv_sec) * (1000 * 1000) + static_cast<uint64_t>(time.tv_usec);
+  return 1000 * usecs;
+}
+
 uint64_t get_time_since_epoch_ms() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -48,6 +60,12 @@ uint64_t get_time_since_epoch_ms() {
 }
 
 #else
+
+uint64_t get_time_ns() {
+  struct timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  return static_cast<uint64_t>(ts.tv_sec) * (1000 * 1000) + static_cast<uint64_t>(ts.tv_nsec);
+}
 
 uint64_t get_time_since_epoch_ms() {
   struct timespec ts;
